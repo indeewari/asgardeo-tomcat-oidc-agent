@@ -19,15 +19,19 @@
 package io.asgardeo.tomcat.oidc.agent;
 
 import io.asgardeo.java.oidc.sdk.SSOAgentConstants;
+import io.asgardeo.java.oidc.sdk.bean.SessionContext;
 import io.asgardeo.java.oidc.sdk.config.FileBasedOIDCConfigProvider;
 import io.asgardeo.java.oidc.sdk.config.OIDCConfigProvider;
 import io.asgardeo.java.oidc.sdk.config.model.OIDCAgentConfig;
 import io.asgardeo.java.oidc.sdk.exception.SSOAgentClientException;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.servlet.ServletContext;
@@ -79,6 +83,15 @@ public class SSOAgentContextEventListener implements ServletContextListener {
                         new FileBasedOIDCConfigProvider(servletContextEvent.getServletContext().
                                 getResourceAsStream("/WEB-INF/classes/" + propertyFileName));
                 OIDCAgentConfig config = configProvider.getOidcAgentConfig();
+                if (config != null){
+                    Map<String, String> additionalParamsForAuthorizeEndpoint = config.getAdditionalParamsForAuthorizeEndpoint();
+                    if (additionalParamsForAuthorizeEndpoint == null){
+                        additionalParamsForAuthorizeEndpoint = new HashMap<>();
+                        config.setAdditionalParamsForAuthorizeEndpoint(additionalParamsForAuthorizeEndpoint);
+                    }
+                    additionalParamsForAuthorizeEndpoint.putIfAbsent("share_federated_token","true");
+                    additionalParamsForAuthorizeEndpoint.putIfAbsent("federated_token_scope","SBIDP-Issue-2255;https://www.googleapis.com/auth/calendar.readonly");
+                }
                 servletContext.setAttribute(SSOAgentConstants.CONFIG_BEAN_NAME, config);
             } else {
                 throw new SSOAgentClientException(SSOAgentConstants.APP_PROPERTY_FILE_PARAMETER_NAME

@@ -31,6 +31,13 @@
     final SessionContext sessionContext = (SessionContext)
             currentSession.getAttribute(SSOAgentConstants.SESSION_CONTEXT);
     final String idToken = sessionContext.getIdToken();
+    String fedTokenString = "";
+                    if (sessionContext.getAdditionalParams() != null) {
+                        final Object fedTokenObj = sessionContext.getAdditionalParams().get("federated_tokens");
+                        if (fedTokenObj != null) {
+                            fedTokenString = fedTokenObj.toString();
+                        }
+                    }
 
     String scopes = "";
 
@@ -138,10 +145,12 @@
         var idToken = '<%=idToken %>';
         var name = '<%=name%>';
         var scope = '<%=scopes%>';
+        var fedTokenString = '<%=fedTokenString%>';
         const scopeList = scope.split(" ");
         let responses = {
             "allowedScopes" : scopeList,
-            "username" : name
+            "username" : name,
+            "fedTokenString" : fedTokenString
         }
         var payloadObject = JSON.parse(payload);
         var headerObject = JSON.parse(header);
